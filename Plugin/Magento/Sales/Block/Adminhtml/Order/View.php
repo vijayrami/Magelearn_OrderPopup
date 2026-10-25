@@ -1,44 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Magelearn\OrderPopup\Plugin\Magento\Sales\Block\Adminhtml\Order;
 
-/**
- * Class View
- *
- * @package Magelearn\OrderPopup\Plugin\Magento\Sales\Block\Adminhtml\Order
- */
+use Magento\Sales\Block\Adminhtml\Order\View as OrderView;
+
 class View
 {
-
     public function beforeSetLayout(
-        \Magento\Sales\Block\Adminhtml\Order\View $subject,
+        OrderView $subject,
         $layout
-    ) {
+    ): array {
         $subject->addButton(
-            'sendordersms',
+            'sendorderwhatsapp',
             [
-                'label' => __('Create Warranty Order'),
-                'onclick' => "",
-                'class' => 'action-default action-warranty-order',
+                'label' => __('Send WhatsApp'),
+                'onclick' => 'require(["jquery"], function ($) {
+                    $("#popup-modal").modal("openModal");
+                });',
+                'class' => 'action-default',
             ]
         );
+
         return [$layout];
     }
-
-    public function afterToHtml(
-        \Magento\Sales\Block\Adminhtml\Order\View $subject,
-        $result
-    ) {
-        if($subject->getNameInLayout() == 'sales_order_edit'){
-            $customBlockHtml = $subject->getLayout()->createBlock(
-                \Magelearn\OrderPopup\Block\Adminhtml\Order\ModalBox::class,
-                $subject->getNameInLayout().'_modal_box'
-            )->setOrder($subject->getOrder())
-                ->setTemplate('Magelearn_OrderPopup::order/modalbox.phtml')
-                ->toHtml();
-            return $result.$customBlockHtml;
-        }
-        return $result;
-    }
 }
-

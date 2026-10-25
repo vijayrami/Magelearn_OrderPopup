@@ -1,65 +1,109 @@
 <?php
 /**
- * @var $block \Magelearn\OrderPopup\Block\Adminhtml\Order\ModalBox
+ * @var \Magelearn\OrderPopup\Block\Adminhtml\Order\ModalBox $block
  */
 ?>
-<?php
-$block_content = $block->createBlock()->getContent();
-?>
-<div id="popup-modal" style="display: none">
-	<p><?= $block->escapeHtml($block->getInfo())?></p>
-    <form action="<?= $block->escapeUrl($block->getFormUrl())?>" method="post"
-          id="order-view-add-warranty-form">
-        <input name="firstname" type="text">
-        <input name="lastname" type="text">
-        <input name="phone" type="text">
-        <input name="bookingTime" type="date">
 
-        <input type="button" value="Submit" id="order-view-add-warranty">
-    </form>
+<div id="popup-modal" style="display: none;">
+
+    <div class="admin__fieldset">
+
+        <div class="admin__field field">
+            <label class="admin__field-label" for="whatsapp-phone">
+                <span><?= $block->escapeHtml(__('Phone Number')) ?></span>
+            </label>
+
+            <div class="admin__field-control">
+                <input
+                    type="text"
+                    id="whatsapp-phone"
+                    name="phone"
+                    class="admin__control-text"
+                    value="<?= $block->escapeHtmlAttr($block->getOrderPhone()) ?>"
+                />
+            </div>
+        </div>
+
+        <div class="admin__field field">
+            <label class="admin__field-label" for="whatsapp-message">
+                <span><?= $block->escapeHtml(__('Message')) ?></span>
+            </label>
+
+            <div class="admin__field-control">
+                <textarea
+                    id="whatsapp-message"
+                    name="message"
+                    rows="8"
+                    class="admin__control-textarea"
+                ><?= $block->escapeHtml($block->getMessage()) ?></textarea>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
 <script>
-    require(
-        [
-            'jquery',
-            'Magento_Ui/js/modal/modal'
-        ],
-        function (
-            $,
-            modal
-        ) {
-            var options = {
-                type: 'popup',
-                responsive: true,
-                innerScroll: true,
-                title: 'Modal Title',
-                modalClass: 'custom-modal',
-                buttons: [{
-                    text: $.mage.__('Close'),
-                    class: '',
-                    click: function () {
-                        this.closeModal();
-                     }
-                }]
-            };
+require([
+    'jquery',
+    'Magento_Ui/js/modal/modal',
+    'mage/translate'
+], function ($, modal) {
+    'use strict';
 
-            var popup = modal(options, $('#popup-modal'));
-            $("#sendordersms").click(function() {
-                $("#popup-modal").modal('openModal');
-            });
+    var options = {
+        type: 'popup',
+        responsive: true,
+        innerScroll: true,
+        title: $.mage.__('Send WhatsApp Message'),
+        modalClass: 'magelearn-whatsapp-modal',
+        buttons: [
+            {
+                text: $.mage.__('Send WhatsApp'),
+                class: 'action-primary',
+                click: function () {
+                    var popup = this;
 
-            $('#order-view-add-warranty').click(function () {
-                $('#order-view-add-warranty-form').append($('<input>', {
-                    'name': 'form_key',
-                    'value': window.FORM_KEY,
-                    'type': 'hidden'
-                }));
-                $('#order-view-add-warranty-form').submit();
+                    $.ajax({
+                        url: '<?= $block->escapeUrl($block->getFormUrl()) ?>',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            form_key: window.FORM_KEY,
+                            phone: $('#whatsapp-phone').val(),
+                            message: $('#whatsapp-message').val()
+                        },
+                        showLoader: true
+                    }).done(function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            popup.closeModal();
+                            return;
+                        }
 
-            });
+                        alert(response.message);
+                    }).fail(function () {
+                        alert(
+                            $.mage.__(
+                                'Unable to send the WhatsApp message.'
+                            )
+                        );
+                    });
+                }
+            },
+            {
+                text: $.mage.__('Close'),
+                class: '',
+                click: function () {
+                    this.closeModal();
+                }
+            }
+        ]
+    };
 
-        }
-
+    modal(
+        options,
+        $('#popup-modal')
     );
+});
 </script>

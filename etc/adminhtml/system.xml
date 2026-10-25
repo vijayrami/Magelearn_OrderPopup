@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="magelearn_orderpopup"
+                 translate="label"
+                 sortOrder="900"
+                 showInDefault="1"
+                 showInWebsite="1"
+                 showInStore="1">
+            <label>WhatsApp Order Notification</label>
+            <tab>sales</tab>
+            <resource>Magelearn_OrderPopup::config</resource>
+            <group id="whatsapp"
+                   translate="label"
+                   sortOrder="10"
+                   showInDefault="1"
+                   showInWebsite="1"
+                   showInStore="1">
+                <label>WhatsApp Settings</label>
+                <field id="enabled"
+                       translate="label"
+                       type="select"
+                       sortOrder="10"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>Enable WhatsApp Notification</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="auto_send"
+                       translate="label"
+                       type="select"
+                       sortOrder="20"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>Send Automatically After Order Placement</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+                <field id="provider"
+                       translate="label"
+                       type="select"
+                       sortOrder="30"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>WhatsApp Provider</label>
+                    <source_model>Magelearn\OrderPopup\Model\Config\Source\Provider</source_model>
+                </field>
+                <field id="country_code"
+                       translate="label"
+                       type="text"
+                       sortOrder="40"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>Default Country Code</label>
+                    <comment>Example: 91 for India. Do not include +.</comment>
+                </field>
+                <field id="message_template"
+                    translate="label"
+                    type="textarea"
+                    sortOrder="50"
+                    showInDefault="1"
+                    showInWebsite="1"
+                    showInStore="1">
+                    <label>Order Message Template</label>
+                    <frontend_model>Magelearn\OrderPopup\Block\Adminhtml\System\Config\MessageTemplate</frontend_model>
+                </field>
+            </group>
+            <group id="waapi"
+                   translate="label"
+                   sortOrder="20"
+                   showInDefault="1"
+                   showInWebsite="1"
+                   showInStore="1">
+                <label>WaAPI Configuration</label>
+                <field id="instance_id"
+                       translate="label"
+                       type="text"
+                       sortOrder="10"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>WaAPI Instance ID</label>
+                </field>
+                <field id="api_token"
+                       translate="label"
+                       type="obscure"
+                       sortOrder="20"
+                       showInDefault="1"
+                       showInWebsite="1"
+                       showInStore="1">
+                    <label>WaAPI API Token</label>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

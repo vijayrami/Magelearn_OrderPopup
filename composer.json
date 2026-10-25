@@ -1,12 +1,11 @@
 {
     "name": "magelearn/module-orderpopup",
-    "description": "",
+    "description": "Magento 2 WhatsApp order notification module",
     "type": "magento2-module",
     "license": "proprietary",
     "authors": [
         {
-            "name": "Mage2Gen",
-            "email": "info@mage2gen.com"
+            "name": "Magelearn"
         }
     ],
     "minimum-stability": "dev",

@@ -1,66 +1,83 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Magelearn\OrderPopup\Block\Adminhtml\Order;
 
-/**
- * Class ModalBox
- *
- * @package Magelearn\OrderPopup\Block\Adminhtml\Order
- */
-use Magento\Cms\Model\PageFactory;
-class ModalBox extends \Magento\Backend\Block\Template
+use Magento\Backend\Block\Template;
+use Magento\Backend\Block\Template\Context;
+use Magento\Framework\Registry;
+use Magento\Sales\Model\Order;
+use Magelearn\OrderPopup\Model\MessageTemplate;
+use Magelearn\OrderPopup\Model\Config;
+
+class ModalBox extends Template
 {
-	/**
-     * Page factory.
-     *
-     * @var PageFactory
-     */
-    private $pageFactory;
-	private $blockFactory;
-    /**
-     * Constructor
-     *
-     * @param \Magento\Backend\Block\Template\Context  $context
-     * @param array $data
-     */
     public function __construct(
-	    PageFactory $pageFactory,
-	    \Magento\Cms\Model\BlockFactory $blockFactory,
-        \Magento\Backend\Block\Template\Context $context,
+        Context $context,
+        private readonly Registry $registry,
+        private readonly Config $config,
+        private readonly MessageTemplate $messageTemplate,
         array $data = []
     ) {
-    	$this->pageFactory = $pageFactory;
-    	$this->blockFactory = $blockFactory;
         parent::__construct($context, $data);
     }
 
-    /**
-     * @return string
-     */
-    public function getInfo()
+    public function getInfo(): string
     {
-        //Your block cod
-        return __('My Title!! ');
+        return (string) __('Send WhatsApp Order Notification');
     }
-    public function getFormUrl()
+
+    public function getFormUrl(): string
     {
-        $orderId = false;
-        if($this->hasData('order')){
-            $orderId = $this->getOrder()->getId();
+        $order = $this->getOrder();
+
+        return $this->getUrl(
+            'orderpopup/order/order',
+            [
+                'order_id' => $order ? (int) $order->getId() : 0,
+            ]
+        );
+    }
+
+    public function getOrder(): ?Order
+    {
+        $order = $this->registry->registry('current_order');
+
+        return $order instanceof Order ? $order : null;
+    }
+
+    public function getOrderPhone(): string
+    {
+        $order = $this->getOrder();
+
+        if (!$order) {
+            return '';
         }
-        return $this->getUrl('orderpopup/order/order',[
-            'order_id' => $orderId
-        ]);
+
+        $shippingAddress = $order->getShippingAddress();
+
+        if ($shippingAddress && $shippingAddress->getTelephone()) {
+            return (string) $shippingAddress->getTelephone();
+        }
+
+        $billingAddress = $order->getBillingAddress();
+
+        if ($billingAddress && $billingAddress->getTelephone()) {
+            return (string) $billingAddress->getTelephone();
+        }
+
+        return '';
     }
-	public function createBlock()
+
+    public function getMessage(): string
     {
-        $testBlock = [
-		    'title' => 'Test block title',
-		    'identifier' => 'test-block',
-		    'stores' => [0],
-		    'is_active' => 1,
-		];
-		return $this->blockFactory->create()->setData($testBlock)->save();
+        $order = $this->getOrder();
+
+        if (!$order) {
+            return '';
+        }
+
+        return $this->messageTemplate->getMessage($order);
     }
 }
-
