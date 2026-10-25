@@ -331,7 +331,7 @@ Example:
 
 ```text
 Instance ID:
-106762
+*****
 ```
 
 The API token is stored using Magento's encrypted configuration backend.
@@ -733,19 +733,19 @@ The module removes non-numeric characters from the phone number.
 For example:
 
 ```text
-+91 96627 82488
++91 9**** *****
 ```
 
 becomes:
 
 ```text
-919662782488
+91**********
 ```
 
 The WhatsApp chat ID is then generated as:
 
 ```text
-919662782488@c.us
+91**********@c.us
 ```
 
 If a configured country code is required, it is automatically added when the phone number does not already contain it.
@@ -764,7 +764,7 @@ The request contains:
 
 ```json
 {
-    "chatId": "919662782488@c.us",
+    "chatId": "91**********@c.us",
     "message": "Hello John Smith..."
 }
 ```
@@ -802,28 +802,6 @@ Please wait until the instance is in ready status before sending messages.
 ```
 
 This is a WaAPI instance-state issue rather than a Magento CURL or authentication issue.
-
----
-
-# API Token Security
-
-The API token is configured through Magento Admin and stored using Magento's encrypted configuration backend.
-
-The token should never be:
-
-- Hard-coded in PHP.
-- Committed to Git.
-- Printed in logs.
-- Returned in API responses.
-- Included in exception messages.
-
-For diagnostic logging, only a boolean such as:
-
-```php
-'token_configured' => $apiToken !== ''
-```
-
-should be logged.
 
 ---
 
@@ -866,109 +844,6 @@ This indicates that the WaAPI instance is authenticated but has not reached the 
 Wait for the instance to become ready and retry the request.
 
 No Magento CURL changes are normally required for this condition.
-
----
-
-## Message Variables Are Not Replaced
-
-If a message contains:
-
-```text
-Hello {{customer_name}}
-```
-
-instead of:
-
-```text
-Hello John Smith
-```
-
-check:
-
-```text
-Model/MessageTemplate.php
-```
-
-and make sure the variable exists in the replacement array.
-
-The Admin template variable must exactly match the supported placeholder.
-
-For example:
-
-```text
-{{customer_name}}
-```
-
-is different from:
-
-```text
-{{customer}}
-```
-
----
-
-## Modal Does Not Open
-
-Verify that:
-
-```text
-#popup-modal
-```
-
-exists on the Admin order page.
-
-The modal block should be loaded through:
-
-```text
-view/adminhtml/layout/sales_order_view.xml
-```
-
-The Plugin should only add the button and should not inject the modal HTML through `afterToHtml()`.
-
----
-
-# Cache and Compilation
-
-After changing PHP classes or dependency injection configuration:
-
-```bash
-rm -rf generated/code generated/metadata
-bin/magento setup:di:compile
-bin/magento cache:clean
-```
-
-For Admin layout, template, or LESS changes, also clear the relevant caches:
-
-```bash
-bin/magento cache:clean layout block_html
-```
-
-In production mode, deploy static content when required:
-
-```bash
-bin/magento setup:static-content:deploy -f
-```
-
----
-
-# Logging
-
-During development, logs can be found in:
-
-```text
-var/log/system.log
-```
-
-Important diagnostic messages include:
-
-```text
-WaAPI configuration loaded.
-WaAPI request prepared.
-WaAPI response received.
-WaAPI request failed.
-```
-
-Avoid logging sensitive information such as the complete API token.
 
 ---
 
@@ -1024,99 +899,3 @@ Recommended practices:
 - Keep Admin presentation logic separate from business logic.
 
 ---
-
-# Example Final WhatsApp Message
-
-With the configured template:
-
-```text
-Hello {{customer_name}},
-
-Thank you for your order with {{store_name}}.
-
-Your order *#{{increment_id}}* has been successfully placed.
-
-*Order Total:* {{order_total}} {{currency}}
-*Shipping Method:* {{shipping_method}}
-*Payment Method:* {{payment_method}}
-
-*Billing Address:*
-{{billing_address}}
-
-*Shipping Address:*
-{{shipping_address}}
-
-We appreciate your business and will keep you updated regarding your order.
-
-Thank you,
-{{store_name}}
-```
-
-The customer could receive:
-
-```text
-Hello John Smith,
-
-Thank you for your order with SupplyBC Store.
-
-Your order #000000003 has been successfully placed.
-
-Order Total: 125.00 CAD
-Shipping Method: Standard Shipping
-Payment Method: Credit Card
-
-Billing Address:
-John Smith
-123 Main Street
-Vancouver, BC V5K 0A1
-CA
-+1 604 123 4567
-
-Shipping Address:
-John Smith
-123 Main Street
-Vancouver, BC V5K 0A1
-CA
-+1 604 123 4567
-
-We appreciate your business and will keep you updated regarding your order.
-
-Thank you,
-SupplyBC Store
-```
-
----
-
-# Summary
-
-`Magelearn_OrderPopup` provides a reusable Magento 2 architecture for WhatsApp order notifications.
-
-The key design principles are:
-
-```text
-Configuration
-     |
-     v
-MessageTemplate
-     |
-     +----------------------+
-     |                      |
-     v                      v
-Automatic Notification   Manual Notification
-     |                      |
-     v                      v
-Observer                  Admin Modal
-     |                      |
-     +----------+-----------+
-                |
-                v
-         ServiceFactory
-                |
-                v
-          WhatsApp Service
-                |
-                v
-             WaAPI
-```
-
-The message template, dynamic variables, provider selection, and WhatsApp transport are intentionally separated so the module can be extended without tightly coupling business logic to a specific WhatsApp provider.
