@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Magelearn\OrderPopup\Block\Adminhtml\Order;
 
+use Magelearn\OrderPopup\Model\MessageTemplate;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
-use Magento\Framework\Registry;
-use Magento\Sales\Model\Order;
-use Magelearn\OrderPopup\Model\MessageTemplate;
-use Magelearn\OrderPopup\Model\Config;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 
 class ModalBox extends Template
 {
+    private ?OrderInterface $order = null;
+
     public function __construct(
         Context $context,
-        private readonly Registry $registry,
-        private readonly Config $config,
+        private readonly OrderRepositoryInterface $orderRepository,
         private readonly MessageTemplate $messageTemplate,
+        private readonly RequestInterface $request,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -30,21 +33,35 @@ class ModalBox extends Template
 
     public function getFormUrl(): string
     {
-        $order = $this->getOrder();
-
         return $this->getUrl(
             'orderpopup/order/order',
             [
-                'order_id' => $order ? (int) $order->getId() : 0,
+                'order_id' => $this->getOrder()
+                    ? (int) $this->getOrder()->getEntityId()
+                    : 0,
             ]
         );
     }
 
-    public function getOrder(): ?Order
+    public function getOrder(): ?OrderInterface
     {
-        $order = $this->registry->registry('current_order');
+        if ($this->order !== null) {
+            return $this->order;
+        }
 
-        return $order instanceof Order ? $order : null;
+        $orderId = (int) $this->request->getParam('order_id');
+
+        if ($orderId <= 0) {
+            return null;
+        }
+
+        try {
+            $this->order = $this->orderRepository->get($orderId);
+        } catch (NoSuchEntityException) {
+            return null;
+        }
+
+        return $this->order;
     }
 
     public function getOrderPhone(): string
